@@ -12,9 +12,4 @@ public class Constants {
         FROZEN,
         OVERFLOW
     }
-
-    enum EnShelfResponse {
-        COMPLETED,
-        FAIL_SHELF_FULL
-    }
 }

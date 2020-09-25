@@ -17,7 +17,7 @@ public class Shelf {
 
     public Shelf(ShelfType type) {
         this(type, type == ShelfType.OVERFLOW ? OVERFLOW_SHELF_CAPACITY : SINGLE_TEMPERATURE_SHELF_CAPACITY);
-        currentOrders = new ArrayList<Order>();
+        currentOrders = new ArrayList<>();
     }
 
     public Shelf(ShelfType type, int capacity) {
@@ -39,9 +39,10 @@ public class Shelf {
     }
 
     /**
+     * Add order to shelf.
      *
      * @param order
-     * @return
+     * @return true if order was added successfully, false otherwise.
      */
     public boolean add(Order order) {
         if (currentOrders.size() < capacity) {
@@ -52,6 +53,12 @@ public class Shelf {
         return false;
     }
 
+    /**
+     * Remove order from shelf.
+     *
+     * @param order
+     * @return true if order was removed successfully, false otherwise.
+     */
     public boolean remove(Order order) {
         System.out.println("Order removed from " + shelfType.name() + ": " + order.getShortIdWithTemp());
         return currentOrders.remove(order);
@@ -61,6 +68,11 @@ public class Shelf {
         return currentOrders;
     }
 
+    /**
+     * Remove a random order from shelf to clear space for incoming orders.
+     *
+     * @return order that was removed.
+     */
     public Order removeRandomOrder() {
         int ind = new Random().nextInt(currentOrders.size());
         Order order = currentOrders.get(ind);
@@ -69,11 +81,23 @@ public class Shelf {
         return order;
     }
 
+    /**
+     * Compute the inherent value of an order on shelf.
+     *
+     * @param order
+     * @param time current simulated time.
+     * @return inherent value of the order.
+     */
     double computeInherentValue(Order order, int time) {
         int orderAge = time - order.timeArrived;
         return (order.shelfLife - orderAge - order.decayRate * orderAge * shelfDecayModifier) / order.shelfLife;
     }
 
+    /**
+     * Clean up all orders with inherent value less than or equal to 0.
+     *
+     * @param time current simulated time.
+     */
     public void cleanUpWastedOrders(int time) {
         List<Order> wasted = new ArrayList<>();
         String wastedStr = "";
@@ -92,6 +116,11 @@ public class Shelf {
         }
     }
 
+    /**
+     * Clean up all delivered orders.
+     *
+     * @param time current simulated time.
+     */
     public void cleanUpDeliveredOrders(int time) {
         List<Order> delivered = new ArrayList<>();
         String deliveredStr = "";
@@ -109,6 +138,11 @@ public class Shelf {
         }
     }
 
+    /**
+     * Get a string representation of all orders currently on shelf.
+     *
+     * @return a string representation of shelf's content.
+     */
     public String getShelfContent() {
         String str = shelfType.name() + " Occupancy (" + currentOrders.size() + "/" + capacity + "): ";
         for (Order order : currentOrders) {
