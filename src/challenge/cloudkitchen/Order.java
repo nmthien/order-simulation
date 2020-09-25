@@ -8,7 +8,7 @@ public class Order {
     // for better readability
     String shortId;
     String name;
-    String temp;
+    Constants.ShelfType temp;
     double shelfLife;
     double decayRate;
     int timeArrived;
@@ -17,10 +17,23 @@ public class Order {
     public Order(String id, String name, String temp, double shelfLife, double decayRate) {
         this.id = id;
         this.name = name;
-        this.temp = temp;
+        this.temp = getOrderTemperature(temp);
         this.shelfLife = shelfLife;
         this.decayRate = decayRate;
         this.shortId = id.split("-")[4];
+    }
+
+    Constants.ShelfType getOrderTemperature(String temp) {
+        if (temp.equals("hot")) {
+            return Constants.ShelfType.HOT;
+        }
+        if (temp.equals("cold")) {
+            return Constants.ShelfType.COLD;
+        }
+        if (temp.equals("frozen")) {
+            return Constants.ShelfType.FROZEN;
+        }
+        return null;
     }
 
     public String getId() {
@@ -29,6 +42,10 @@ public class Order {
 
     public String getShortId() {
         return this.shortId;
+    }
+
+    public Constants.ShelfType getTemp() {
+        return temp;
     }
 
     public String getShortIdWithTemp() {
@@ -51,6 +68,12 @@ public class Order {
         this.timeArrived = time;
     }
 
+    /**
+     * Create an Order object from a JSONObject.
+     *
+     * @param o the JSONObject to be parsed.
+     * @return Order object parsed from JSONObject.
+     */
     public static Order fromJsonObject(JSONObject o) {
         return new Order(
                 (String)o.get("id"),

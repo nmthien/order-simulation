@@ -21,11 +21,8 @@ public class Shelf {
 
     public Shelf(ShelfType type, int capacity) {
         this.shelfType = type;
-        if (type == ShelfType.OVERFLOW) {
-            this.shelfDecayModifier = SHELF_DECAY_MODIFIER_OVERFLOW;
-        } else {
-            this.shelfDecayModifier = SHELF_DECAY_MODIFIER_SINGLE_TEMPERATURE;
-        }
+        this.shelfDecayModifier =
+                type == ShelfType.OVERFLOW ? SHELF_DECAY_MODIFIER_OVERFLOW : SHELF_DECAY_MODIFIER_SINGLE_TEMPERATURE;
         this.capacity = capacity;
         currentOrders = new ArrayList<>();
     }
@@ -39,12 +36,20 @@ public class Shelf {
     }
 
     /**
-     * Add order to shelf.
+     * Add order to shelf. If the order is already on shelf, it won't be added again.
      *
      * @param order
      * @return true if order was added successfully, false otherwise.
      */
     public boolean add(Order order) {
+        for (Order o : currentOrders) {
+            if (o.getId().equals(order.getId())) {
+                return false;
+            }
+        }
+        if (shelfType != ShelfType.OVERFLOW && shelfType != order.temp) {
+            return false;
+        }
         if (currentOrders.size() < capacity) {
             currentOrders.add(order);
             System.out.println("Order added to " + shelfType.name() + ": " + order.getShortIdWithTemp());
@@ -74,6 +79,9 @@ public class Shelf {
      * @return order that was removed.
      */
     public Order removeRandomOrder() {
+        if (currentOrders.size() == 0) {
+            return null;
+        }
         int ind = new Random().nextInt(currentOrders.size());
         Order order = currentOrders.get(ind);
         currentOrders.remove(ind);
@@ -109,9 +117,7 @@ public class Shelf {
             }
         }
         if (!wasted.isEmpty()) {
-            for (Order order : wasted) {
-                currentOrders.remove(order);
-            }
+            currentOrders.removeAll(wasted);
             System.out.println("Orders wasted and removed from " + shelfType.name() + ": " + wastedStr);
         }
     }
@@ -131,9 +137,7 @@ public class Shelf {
             }
         }
         if (!delivered.isEmpty()) {
-            for (Order order : delivered) {
-                currentOrders.remove(order);
-            }
+            currentOrders.removeAll(delivered);
             System.out.println("Orders delivered and removed from " + shelfType.name() + ": " + deliveredStr);
         }
     }

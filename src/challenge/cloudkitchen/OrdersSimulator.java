@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import static challenge.cloudkitchen.Constants.MAX_TIME_PICK_UP;
+import static challenge.cloudkitchen.Constants.MIN_TIME_PICK_UP;
+
 public class OrdersSimulator {
 
     private final static Logger LOGGER = Logger.getLogger(OrdersSimulator.class.getName());
@@ -45,13 +48,16 @@ public class OrdersSimulator {
             List<Order> orderBatch = getNextOrderBatch(count);
             ingest(orderBatch, timer);
             count += ingestionRate;
-            logShelfContent();
+            printShelfContent();
             Thread.sleep(1000);
             timer++;
         }
     }
 
-    void logShelfContent() {
+    /**
+     * Print contents of all shelves to console.
+     */
+    void printShelfContent() {
         System.out.println(hotShelf.getShelfContent());
         System.out.println(coldShelf.getShelfContent());
         System.out.println(frozenShelf.getShelfContent());
@@ -107,21 +113,31 @@ public class OrdersSimulator {
         System.out.println("New orders: " + getOrdersIdsStr(orders));
         for (Order order : orders) {
             order.arrive(time);
-            order.setTimePickedUp(time + new Random().nextInt(100) + 2);
+            order.setTimePickedUp(
+                    time + new Random().nextInt(MAX_TIME_PICK_UP - MIN_TIME_PICK_UP + 1) + MIN_TIME_PICK_UP);
             Shelf shelf = getShelf(order);
-            if (!shelf.add(order)) {
-                if (!overflowShelf.add(order)) {
-                    Order movableOrder = getMovableOrder();
-                    if (movableOrder != null) {
-                        overflowShelf.remove(movableOrder);
-                        Shelf nextShelf = getShelf(movableOrder);
-                        nextShelf.add(movableOrder);
-                    } else {
-                        overflowShelf.removeRandomOrder();
-                    }
-                    overflowShelf.add(order);
-                }
+            if (shelf.add(order)) {
+                continue;
             }
+            if (overflowShelf.add(order)) {
+                continue;
+            }
+            makeRoomOnOverflowShelf();
+            overflowShelf.add(order);
+        }
+    }
+
+    /**
+     * Move an order to a single temperature shelf or remove a random order from overflow shelf to make room.
+     */
+    void makeRoomOnOverflowShelf() {
+        Order movableOrder = getMovableOrder();
+        if (movableOrder != null) {
+            overflowShelf.remove(movableOrder);
+            Shelf nextShelf = getShelf(movableOrder);
+            nextShelf.add(movableOrder);
+        } else {
+            overflowShelf.removeRandomOrder();
         }
     }
 
@@ -161,13 +177,16 @@ public class OrdersSimulator {
      * @return shelf to put the order in.
      */
     Shelf getShelf(Order order) {
-        if (order.temp.equals("hot")) {
+        if (order.getTemp().equals(Constants.ShelfType.HOT)) {
             return hotShelf;
         }
-        if (order.temp.equals("cold")) {
+        if (order.getTemp().equals(Constants.ShelfType.COLD)) {
             return coldShelf;
         }
-        return frozenShelf;
+        if (order.getTemp().equals(Constants.ShelfType.FROZEN)) {
+            return frozenShelf;
+        }
+        return null;
     }
 
     private static CommandLine getCommandLine(String[] args) {
