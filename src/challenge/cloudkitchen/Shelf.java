@@ -17,7 +17,6 @@ public class Shelf {
 
     public Shelf(ShelfType type) {
         this(type, type == ShelfType.OVERFLOW ? OVERFLOW_SHELF_CAPACITY : SINGLE_TEMPERATURE_SHELF_CAPACITY);
-        currentOrders = new ArrayList<>();
     }
 
     public Shelf(ShelfType type, int capacity) {
@@ -28,6 +27,7 @@ public class Shelf {
             this.shelfDecayModifier = SHELF_DECAY_MODIFIER_SINGLE_TEMPERATURE;
         }
         this.capacity = capacity;
+        currentOrders = new ArrayList<>();
     }
 
     public ShelfType getShelfType() {
