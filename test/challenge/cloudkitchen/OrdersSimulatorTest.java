@@ -62,4 +62,9 @@ public class OrdersSimulatorTest {
         Assert.assertEquals(order2, orders.get(0));
         Assert.assertEquals(order3, orders.get(1));
     }
+
+    @Test
+    public void testIngest() {
+
+    }
 }

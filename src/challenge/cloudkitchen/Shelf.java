@@ -125,7 +125,7 @@ public class Shelf {
         List<Order> delivered = new ArrayList<>();
         String deliveredStr = "";
         for (Order order : currentOrders) {
-            if (order.getTimePickedUp() == time) {
+            if (order.getTimePickedUp() <= time) {
                 deliveredStr += order.getShortId() + " ";
                 delivered.add(order);
             }
