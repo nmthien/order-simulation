@@ -8,6 +8,12 @@ public class Constants {
     public static final int MIN_TIME_PICK_UP = 2;
     public static final int MAX_TIME_PICK_UP = 6;
 
+    enum OrderTemperature {
+        HOT,
+        COLD,
+        FROZEN
+    }
+
     enum ShelfType {
         HOT,
         COLD,

@@ -12,18 +12,28 @@ import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import challenge.cloudkitchen.Constants.*;
+
 import static challenge.cloudkitchen.Constants.MAX_TIME_PICK_UP;
 import static challenge.cloudkitchen.Constants.MIN_TIME_PICK_UP;
 
+/**
+ * A simulator that simulate life cycle of orders from the time they're ready to be delivered to the time they're
+ * picked up by couriers.
+ * <p>Required argument:
+ *   - input file path
+ * <p>Optional argument:
+ *   - ingestion rate (default value: 2)
+ */
 public class OrdersSimulator {
 
     private final static Logger LOGGER = Logger.getLogger(OrdersSimulator.class.getName());
 
     List<Order> orders;
-    Shelf hotShelf = new Shelf(Constants.ShelfType.HOT);
-    Shelf coldShelf = new Shelf(Constants.ShelfType.COLD);
-    Shelf frozenShelf = new Shelf(Constants.ShelfType.FROZEN);
-    Shelf overflowShelf = new Shelf(Constants.ShelfType.OVERFLOW);
+    Shelf hotShelf = new Shelf(ShelfType.HOT);
+    Shelf coldShelf = new Shelf(ShelfType.COLD);
+    Shelf frozenShelf = new Shelf(ShelfType.FROZEN);
+    Shelf overflowShelf = new Shelf(ShelfType.OVERFLOW);
     int numOrder;
     int ingestionRate;
 
@@ -37,10 +47,16 @@ public class OrdersSimulator {
         this.numOrder = orders.size();
     }
 
+    /**
+     * Executing the simulation. This method uses Thread.sleep(1000) to simulate each second passing by.
+     * Simulating time started at 0.
+     *
+     * @throws InterruptedException when the program is interrupted during Thread.sleep()
+     */
     public void run() throws InterruptedException {
         int count = 0;
         int timer = 0;
-        while (count < numOrder) {
+        while (count < numOrder || hasNonEmptyShelf()) {
             LOGGER.info("Timestamp = " + timer + " ------------------------------");
 
             checkWastedOrder(timer);
@@ -52,6 +68,13 @@ public class OrdersSimulator {
             Thread.sleep(1000);
             timer++;
         }
+    }
+
+    boolean hasNonEmptyShelf() {
+        return hotShelf.getCurrentOrders().size() > 0
+                || coldShelf.getCurrentOrders().size() > 0
+                || frozenShelf.getCurrentOrders().size() > 0
+                || overflowShelf.getCurrentOrders().size() > 0;
     }
 
     /**
@@ -110,7 +133,7 @@ public class OrdersSimulator {
      * @param time current simulated time.
      */
     void ingest(List<Order> orders, int time) {
-        System.out.println("New orders: " + getOrdersIdsStr(orders));
+        System.out.println("New orders: " + (orders.size() > 0 ? getOrdersIdsStr(orders) : "None"));
         for (Order order : orders) {
             order.arrive(time);
             order.setTimePickedUp(
@@ -177,13 +200,13 @@ public class OrdersSimulator {
      * @return shelf to put the order in.
      */
     Shelf getShelf(Order order) {
-        if (order.getTemp().equals(Constants.ShelfType.HOT)) {
+        if (order.getTemp().equals(OrderTemperature.HOT)) {
             return hotShelf;
         }
-        if (order.getTemp().equals(Constants.ShelfType.COLD)) {
+        if (order.getTemp().equals(OrderTemperature.COLD)) {
             return coldShelf;
         }
-        if (order.getTemp().equals(Constants.ShelfType.FROZEN)) {
+        if (order.getTemp().equals(OrderTemperature.FROZEN)) {
             return frozenShelf;
         }
         return null;

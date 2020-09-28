@@ -1,14 +1,23 @@
 package challenge.cloudkitchen;
 
 import org.json.simple.JSONObject;
+import challenge.cloudkitchen.Constants.*;
 
+/**
+ * This class contains metadata of an order when it's placed by clients. The order
+ * is identified by a UUID (<i>id</i>) or a short version of it (<i>shortId</i>),
+ * which is the last segment of the UUID. Upon being initiated, the order's constructor
+ * will create the <i>shortId</i>.
+ *
+ * Currently support orders of three temperatures: hot, cold and frozen.
+ */
 public class Order {
     String id;
     // shortId is the last segment of the full ID. We could use it for identifying an order on output console
     // for better readability
     String shortId;
     String name;
-    Constants.ShelfType temp;
+    OrderTemperature temp;
     double shelfLife;
     double decayRate;
     int timeArrived;
@@ -23,15 +32,15 @@ public class Order {
         this.shortId = id.split("-")[4];
     }
 
-    Constants.ShelfType getOrderTemperature(String temp) {
+    OrderTemperature getOrderTemperature(String temp) {
         if (temp.equals("hot")) {
-            return Constants.ShelfType.HOT;
+            return OrderTemperature.HOT;
         }
         if (temp.equals("cold")) {
-            return Constants.ShelfType.COLD;
+            return OrderTemperature.COLD;
         }
         if (temp.equals("frozen")) {
-            return Constants.ShelfType.FROZEN;
+            return OrderTemperature.FROZEN;
         }
         return null;
     }
@@ -44,7 +53,7 @@ public class Order {
         return this.shortId;
     }
 
-    public Constants.ShelfType getTemp() {
+    public Constants.OrderTemperature getTemp() {
         return temp;
     }
 

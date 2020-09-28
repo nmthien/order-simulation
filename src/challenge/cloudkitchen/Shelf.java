@@ -8,6 +8,12 @@ import java.util.Random;
 
 import static challenge.cloudkitchen.Constants.*;
 
+/**
+ * This class contains metadata of a shelf and various methods implementing shelf's functionalities.
+ * A shelf could be one of 4 types: hot, cold, frozen or overflow; distinguished by its <i>shelfType</i>.
+ * <p>A shelf object provides various methods for adding orders to, removing orders from itself,
+ * cleaning up delivered or wasted orders.</p>
+ */
 public class Shelf {
 
     ShelfType shelfType;
@@ -31,6 +37,11 @@ public class Shelf {
         return shelfType;
     }
 
+    /**
+     * Check if shelf still has room for new orders.
+     *
+     * @return true if shelf has room, false otherwise.
+     */
     public boolean isAvailable() {
         return currentOrders.size() < capacity;
     }
@@ -38,7 +49,7 @@ public class Shelf {
     /**
      * Add order to shelf. If the order is already on shelf, it won't be added again.
      *
-     * @param order
+     * @param order the order to be added
      * @return true if order was added successfully, false otherwise.
      */
     public boolean add(Order order) {
@@ -47,7 +58,7 @@ public class Shelf {
                 return false;
             }
         }
-        if (shelfType != ShelfType.OVERFLOW && shelfType != order.temp) {
+        if (!matchTemperature(order)) {
             return false;
         }
         if (currentOrders.size() < capacity) {
@@ -56,6 +67,28 @@ public class Shelf {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Check if an order's temperature matches shelf's temperature.
+     *
+     * @param order the order to check
+     * @return true if shelf is overflow shelf or the temperature match; false otherwise.
+     */
+    boolean matchTemperature(Order order) {
+        OrderTemperature orderTemperature = order.getTemp();
+        if (shelfType != ShelfType.OVERFLOW) {
+            if (shelfType == ShelfType.HOT && orderTemperature != OrderTemperature.HOT) {
+                return false;
+            }
+            if (shelfType == ShelfType.COLD && orderTemperature != OrderTemperature.COLD) {
+                return false;
+            }
+            if (shelfType == ShelfType.FROZEN && orderTemperature != OrderTemperature.FROZEN) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -112,7 +145,8 @@ public class Shelf {
         for (Order order : currentOrders) {
             double inherentValue = computeInherentValue(order, time);
             if (inherentValue <= 0) {
-                wastedStr += order.getShortId() + " ";
+                wastedStr +=
+                        order.getShortId() + "(after " + (time - order.getTimeArrived()) + "s) ";
                 wasted.add(order);
             }
         }
@@ -132,7 +166,8 @@ public class Shelf {
         String deliveredStr = "";
         for (Order order : currentOrders) {
             if (order.getTimePickedUp() <= time) {
-                deliveredStr += order.getShortId() + " ";
+                deliveredStr +=
+                        order.getShortId() + "(after " + (time - order.getTimeArrived()) + "s) ";
                 delivered.add(order);
             }
         }
@@ -151,6 +186,9 @@ public class Shelf {
         String str = shelfType.name() + " Occupancy (" + currentOrders.size() + "/" + capacity + "): ";
         for (Order order : currentOrders) {
             str += order.getShortId() + " ";
+        }
+        if (currentOrders.size() == 0) {
+            str += "None";
         }
         return str;
     }
