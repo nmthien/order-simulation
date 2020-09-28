@@ -20,8 +20,8 @@ public class Order {
     OrderTemperature temp;
     double shelfLife;
     double decayRate;
-    int timeArrived;
-    int timePickedUp;
+    Integer timeArrived;
+    Integer timePickedUp;
 
     public Order(String id, String name, String temp, double shelfLife, double decayRate) {
         this.id = id;
@@ -30,6 +30,8 @@ public class Order {
         this.shelfLife = shelfLife;
         this.decayRate = decayRate;
         this.shortId = id.split("-")[4];
+        timeArrived = null;
+        timePickedUp = null;
     }
 
     OrderTemperature getOrderTemperature(String temp) {
@@ -61,11 +63,11 @@ public class Order {
         return this.shortId + "(" + this.temp + ")";
     }
 
-    public int getTimeArrived() {
+    public Integer getTimeArrived() {
         return timeArrived;
     }
 
-    public int getTimePickedUp() {
+    public Integer getTimePickedUp() {
         return timePickedUp;
     }
 

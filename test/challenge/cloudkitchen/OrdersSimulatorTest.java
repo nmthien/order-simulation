@@ -20,13 +20,22 @@ public class OrdersSimulatorTest {
 
     @Before
     public void setup() {
-        orders = new ArrayList<>();
         frozenOrder1 = new Order("0-0-0-0-1", "order1", "frozen", 300, 0.61);
+        frozenOrder1.arrive(0);
+        frozenOrder1.setTimePickedUp(10);
         coldOrder1 = new Order("0-0-0-0-2", "order2", "cold", 269, 0.19);
+        coldOrder1.arrive(0);
+        coldOrder1.setTimePickedUp(10);
         hotOrder1 = new Order("0-0-0-0-3", "order3", "hot", 251, 0.22);
+        hotOrder1.arrive(0);
+        hotOrder1.setTimePickedUp(10);
         frozenOrder2 = new Order("0-0-0-0-4", "order4", "frozen", 251, 0.22);
+        frozenOrder2.arrive(0);
+        frozenOrder2.setTimePickedUp(10);
         hotOrder2 = new Order("0-0-0-0-5", "order5", "hot", 251, 0.22);
-        orders.addAll(Arrays.asList(frozenOrder1, coldOrder1, hotOrder1, frozenOrder2, hotOrder2));
+        hotOrder2.arrive(0);
+        hotOrder2.setTimePickedUp(10);
+        orders = Arrays.asList(frozenOrder1, coldOrder1, hotOrder1, frozenOrder2, hotOrder2);
         sim = new OrdersSimulator(2, orders);
         sim.frozenShelf.add(frozenOrder1);
         sim.coldShelf.add(coldOrder1);
@@ -42,12 +51,18 @@ public class OrdersSimulatorTest {
     @Test
     public void testGetMovableOrder() {
         // Successfully get an order to move from overflow to frozen shelf
-        Order order = sim.getMovableOrder();
-        Assert.assertEquals("4", order.getShortId());
+        // 2 orders on overflowShelf: frozenOrder1 (arrived at 0), frozenOrder2 (arrived at 0).
+        // At time 10, inherent values of frozenOrder1 and frozenOrder2 are 0.926 and 0.943.
+        // Getting movable order from this shelf should return frozenOrder1
+        sim.overflowShelf.currentOrders.clear();
+        sim.overflowShelf.currentOrders.add(frozenOrder1);
+        sim.overflowShelf.currentOrders.add(frozenOrder2);
+        Order order = sim.getMovableOrder(10);
+        Assert.assertEquals(frozenOrder1, order);
 
         // Not able to get an order to move because the corresponding shelf is full
         sim.frozenShelf.capacity = 1;
-        order = sim.getMovableOrder();
+        order = sim.getMovableOrder(10);
         Assert.assertNull(order);
     }
 
@@ -69,14 +84,14 @@ public class OrdersSimulatorTest {
     @Test
     public void testMakeRoomOnOverflowShelf() {
         // Make room by moving order to another shelf
-        sim.makeRoomOnOverflowShelf();
+        sim.makeRoomOnOverflowShelf(10);
         Assert.assertEquals(0, sim.overflowShelf.getCurrentOrders().size());
 
         // Make room by remove a random order
         sim.overflowShelf.add(frozenOrder2);
         sim.overflowShelf.add(hotOrder2);
         sim.hotShelf.capacity = 1;
-        sim.makeRoomOnOverflowShelf();
+        sim.makeRoomOnOverflowShelf(10);
         Assert.assertEquals(1, sim.overflowShelf.getCurrentOrders().size());
     }
 

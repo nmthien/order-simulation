@@ -20,8 +20,10 @@ import static challenge.cloudkitchen.Constants.MIN_TIME_PICK_UP;
 /**
  * A simulator that simulate life cycle of orders from the time they're ready to be delivered to the time they're
  * picked up by couriers.
+ *
  * <p>Required argument:
  *   - input file path
+ *
  * <p>Optional argument:
  *   - ingestion rate (default value: 2)
  */
@@ -34,8 +36,12 @@ public class OrdersSimulator {
     Shelf coldShelf = new Shelf(ShelfType.COLD);
     Shelf frozenShelf = new Shelf(ShelfType.FROZEN);
     Shelf overflowShelf = new Shelf(ShelfType.OVERFLOW);
-    int numOrder;
-    int ingestionRate;
+    Integer numOrder;
+    Integer ingestionRate;
+
+    int numDelivered;
+    int numDiscarded;
+    int numWasted;
 
     public OrdersSimulator(int ingestionRate) {
         this(ingestionRate, new ArrayList<>());
@@ -45,6 +51,9 @@ public class OrdersSimulator {
         this.ingestionRate = ingestionRate;
         this.orders = orders;
         this.numOrder = orders.size();
+        this.numDelivered = 0;
+        this.numDiscarded = 0;
+        this.numWasted = 0;
     }
 
     /**
@@ -57,7 +66,7 @@ public class OrdersSimulator {
         int count = 0;
         int timer = 0;
         while (count < numOrder || hasNonEmptyShelf()) {
-            LOGGER.info("Timestamp = " + timer + " ------------------------------");
+            LOGGER.info("Timestamp = " + timer);
 
             checkWastedOrder(timer);
             checkDeliveredOrder(timer);
@@ -68,6 +77,15 @@ public class OrdersSimulator {
             Thread.sleep(1000);
             timer++;
         }
+        printAnalytics();
+    }
+
+    void printAnalytics() {
+        System.out.println("=========================================================");
+        System.out.println("SUMMARY:");
+        System.out.println("Number of orders picked up: " + numDelivered);
+        System.out.println("Number of orders discarded to make room: " + numDiscarded);
+        System.out.println("Number of orders wasted and discarded: " + numWasted);
     }
 
     boolean hasNonEmptyShelf() {
@@ -93,21 +111,38 @@ public class OrdersSimulator {
      * @param time current simulated time.
      */
     void checkWastedOrder(int time) {
+        int sum = countNumOrdersOnShelves();
         hotShelf.cleanUpWastedOrders(time);
         coldShelf.cleanUpWastedOrders(time);
         frozenShelf.cleanUpWastedOrders(time);
         overflowShelf.cleanUpWastedOrders(time);
+        numWasted += sum - countNumOrdersOnShelves();
     }
 
     /**
      * Check and clean up delivered orders.
+     *
      * @param time current simulated time.
      */
     void checkDeliveredOrder(int time) {
+        int sum = countNumOrdersOnShelves();
         hotShelf.cleanUpDeliveredOrders(time);
         coldShelf.cleanUpDeliveredOrders(time);
         frozenShelf.cleanUpDeliveredOrders(time);
         overflowShelf.cleanUpDeliveredOrders(time);
+        numDelivered += sum - countNumOrdersOnShelves();
+    }
+
+    /**
+     * Count total number of orders currently on all shelves.
+     *
+     * @return total number of orders currently on all shelves.
+     */
+    int countNumOrdersOnShelves() {
+        return hotShelf.getCurrentOrders().size()
+                + coldShelf.getCurrentOrders().size()
+                + frozenShelf.getCurrentOrders().size()
+                + overflowShelf.getCurrentOrders().size();
     }
 
     /**
@@ -136,8 +171,7 @@ public class OrdersSimulator {
         System.out.println("New orders: " + (orders.size() > 0 ? getOrdersIdsStr(orders) : "None"));
         for (Order order : orders) {
             order.arrive(time);
-            order.setTimePickedUp(
-                    time + new Random().nextInt(MAX_TIME_PICK_UP - MIN_TIME_PICK_UP + 1) + MIN_TIME_PICK_UP);
+            dispatch(order, time);
             Shelf shelf = getShelf(order);
             if (shelf.add(order)) {
                 continue;
@@ -145,21 +179,33 @@ public class OrdersSimulator {
             if (overflowShelf.add(order)) {
                 continue;
             }
-            makeRoomOnOverflowShelf();
+            makeRoomOnOverflowShelf(time);
             overflowShelf.add(order);
         }
     }
 
     /**
+     * Dispatch a courier to pick up an order.
+     *
+     * @param order the order to be picked up.
+     * @param time time that the order arrived on shelf.
+     */
+    void dispatch(Order order, int time) {
+        order.setTimePickedUp(
+                time + new Random().nextInt(MAX_TIME_PICK_UP - MIN_TIME_PICK_UP + 1) + MIN_TIME_PICK_UP);
+    }
+
+    /**
      * Move an order to a single temperature shelf or remove a random order from overflow shelf to make room.
      */
-    void makeRoomOnOverflowShelf() {
-        Order movableOrder = getMovableOrder();
+    void makeRoomOnOverflowShelf(int time) {
+        Order movableOrder = getMovableOrder(time);
         if (movableOrder != null) {
             overflowShelf.remove(movableOrder);
             Shelf nextShelf = getShelf(movableOrder);
             nextShelf.add(movableOrder);
         } else {
+            numDiscarded++;
             overflowShelf.removeRandomOrder();
         }
     }
@@ -180,17 +226,24 @@ public class OrdersSimulator {
 
     /**
      * Get an order from overflow shelf that could be moved to a single temperature shelf.
+     * Eligible order with lowest inherent value will be selected.
      *
      * @return an order to be moved if possible. null if not possible.
      */
-    Order getMovableOrder() {
+    Order getMovableOrder(int time) {
+        Order pickedOrder = null;
+        double minInherentValue = -1;
         for (Order order : overflowShelf.getCurrentOrders()) {
             Shelf shelf = getShelf(order);
             if (shelf.isAvailable()) {
-                return order;
+                double inherentValue = overflowShelf.computeInherentValue(order, time);
+                if (minInherentValue == -1 || inherentValue < minInherentValue) {
+                    pickedOrder = order;
+                    minInherentValue = inherentValue;
+                }
             }
         }
-        return null;
+        return pickedOrder;
     }
 
     /**

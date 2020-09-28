@@ -11,6 +11,7 @@ import static challenge.cloudkitchen.Constants.*;
 /**
  * This class contains metadata of a shelf and various methods implementing shelf's functionalities.
  * A shelf could be one of 4 types: hot, cold, frozen or overflow; distinguished by its <i>shelfType</i>.
+ *
  * <p>A shelf object provides various methods for adding orders to, removing orders from itself,
  * cleaning up delivered or wasted orders.</p>
  */
@@ -59,6 +60,9 @@ public class Shelf {
             }
         }
         if (!matchTemperature(order)) {
+            return false;
+        }
+        if (order.getTimeArrived() == null || order.getTimePickedUp() == null) {
             return false;
         }
         if (currentOrders.size() < capacity) {
