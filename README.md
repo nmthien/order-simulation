@@ -6,6 +6,9 @@ Opening the project with IntelliJ and running it from the IDE would be the best 
     <li><code>-i</code>: input file path (required)</li>
     <li><code>-r</code>: ingestion rate (optional)</li>
 </ul>
+The input file is packaged along with the source codes, so setting the program arguments as below should work:
+<p><code>-i src/challenge/cloudkitchen/orders.json</code></p>
+
 It's useful for testing to change the pick-up time range (2s - 6s by default). Those values can be changed by modifying the constants defined in Constants class.
 Since they're not required to be configurable by the challenge description, I didn't add main method's arguments for them.
 
