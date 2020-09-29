@@ -17,7 +17,7 @@ public class Order {
     // for better readability
     String shortId;
     String name;
-    OrderTemperature temp;
+    Temperature temp;
     double shelfLife;
     double decayRate;
     Integer timeArrived;
@@ -34,15 +34,15 @@ public class Order {
         timePickedUp = null;
     }
 
-    OrderTemperature getOrderTemperature(String temp) {
+    Temperature getOrderTemperature(String temp) {
         if (temp.equals("hot")) {
-            return OrderTemperature.HOT;
+            return Temperature.HOT;
         }
         if (temp.equals("cold")) {
-            return OrderTemperature.COLD;
+            return Temperature.COLD;
         }
         if (temp.equals("frozen")) {
-            return OrderTemperature.FROZEN;
+            return Temperature.FROZEN;
         }
         return null;
     }
@@ -55,7 +55,7 @@ public class Order {
         return this.shortId;
     }
 
-    public Constants.OrderTemperature getTemp() {
+    public Temperature getTemp() {
         return temp;
     }
 

@@ -39,12 +39,14 @@ A full life-cycle of an order would be:
     <li>Order's delivery status tracked</li>
 </ol>
 The simulation focuses on step 3-4-5-6 of this life-cycle.
+
 <h3>Dispatcher</h3> 
-In real life architecture, the dispatcher should would as a stand-alone service listening on an <code>Order</code> topic for incoming orders and dispatch couriers accordingly.
-When an order is picked up, its picked-up time would be updated by calling <code>order.sePickedUpTime(currentTime)</code>.
+In real life architecture, the dispatcher should work as a stand-alone service listening on an <code>Order</code> topic for incoming orders and dispatch couriers accordingly.
+When an order is picked up, its picked-up time would be updated by calling <code>order.setPickedUpTime(currentTime)</code>.
 <p>However for simplicity and the purpose of the simulator to have each order picked up randomly from 2-6s, the dispatcher is simplified to be a function call to assign the pick up time of an order upon its arrival on a shelf.</p> 
 
 <h3>Shelf</h3>
-Shelf could be abstracted and have different shelf types extended it.
-However since the simulation is dealing with only two shelf types (single temperature and overflow) and most of the complicated logics are for overflow shelf, I decided to not overdo it and use a single class with ShelfType enum to distinguish between different shelf types.
- 
+<p>New shelf types could be added by extending the abstract Shelf class.</p>
+<p>The current implementation of Shelf has an ArrayList to keep track of orders currently on Shelf.
+In a real life scaled system that involves other components, we can use other data structure optimized for look-up such as HashSet to store the orders.
+For example when a courier comes to pick up an order, we'd want to look it up and remove it from the shelf in constant time.</p> 

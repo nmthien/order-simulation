@@ -27,8 +27,8 @@ public class ShelfTest {
         hotOrder2 = new Order("0-0-0-0-4", "order4", "hot", 251, 0.22);
         hotOrder2.arrive(0);
         hotOrder2.setTimePickedUp(10);
-        overflowShelf = new Shelf(Constants.ShelfType.OVERFLOW);
-        hotShelf = new Shelf(Constants.ShelfType.HOT);
+        overflowShelf = new OverflowShelf();
+        hotShelf = new SingleTemperatureShelf(Constants.Temperature.HOT);
     }
 
     @Test
@@ -84,6 +84,13 @@ public class ShelfTest {
         overflowShelf.currentOrders.clear();
         order = overflowShelf.removeRandomOrder();
         Assert.assertNull(order);
+
+        // Removing a random order from a single temperature shelf throws an exception
+        try {
+            hotShelf.removeRandomOrder();
+        } catch (Exception e) {
+            Assert.assertEquals("Cannot remove random order from single temperature shelf", e.getMessage());
+        }
     }
 
     @Test

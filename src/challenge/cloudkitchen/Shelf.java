@@ -1,41 +1,28 @@
 package challenge.cloudkitchen;
 
-import challenge.cloudkitchen.Constants.ShelfType;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-
-import static challenge.cloudkitchen.Constants.*;
 
 /**
  * This class contains metadata of a shelf and various methods implementing shelf's functionalities.
- * A shelf could be one of 4 types: hot, cold, frozen or overflow; distinguished by its <i>shelfType</i>.
+ * A shelf could be one of 2 types: single temperature or overflow.
+ * Single temperature shelf could be of hot, cold or frozen temperature.
  *
- * <p>A shelf object provides various methods for adding orders to, removing orders from itself,
+ * <p>A shelf object provides methods for adding orders, removing orders,
  * cleaning up delivered or wasted orders.</p>
  */
-public class Shelf {
+public abstract class Shelf {
 
-    ShelfType shelfType;
     List<Order> currentOrders;
     int shelfDecayModifier;
     int capacity;
 
-    public Shelf(ShelfType type) {
-        this(type, type == ShelfType.OVERFLOW ? OVERFLOW_SHELF_CAPACITY : SINGLE_TEMPERATURE_SHELF_CAPACITY);
-    }
-
-    public Shelf(ShelfType type, int capacity) {
-        this.shelfType = type;
-        this.shelfDecayModifier =
-                type == ShelfType.OVERFLOW ? SHELF_DECAY_MODIFIER_OVERFLOW : SHELF_DECAY_MODIFIER_SINGLE_TEMPERATURE;
-        this.capacity = capacity;
+    public Shelf() {
         currentOrders = new ArrayList<>();
     }
 
-    public ShelfType getShelfType() {
-        return shelfType;
+    public List<Order> getCurrentOrders() {
+        return currentOrders;
     }
 
     /**
@@ -47,8 +34,10 @@ public class Shelf {
         return currentOrders.size() < capacity;
     }
 
+
     /**
-     * Add order to shelf. If the order is already on shelf, it won't be added again.
+     * Add order to shelf. If the order is already on shelf or doesn't have arrival or pick-up time,
+     * it won't be added again.
      *
      * @param order the order to be added
      * @return true if order was added successfully, false otherwise.
@@ -59,40 +48,15 @@ public class Shelf {
                 return false;
             }
         }
-        if (!matchTemperature(order)) {
-            return false;
-        }
         if (order.getTimeArrived() == null || order.getTimePickedUp() == null) {
             return false;
         }
         if (currentOrders.size() < capacity) {
             currentOrders.add(order);
-            System.out.println("Order added to " + shelfType.name() + ": " + order.getShortIdWithTemp());
+            System.out.println("Order added to " + getShelfName() + ": " + order.getShortIdWithTemp());
             return true;
         }
         return false;
-    }
-
-    /**
-     * Check if an order's temperature matches shelf's temperature.
-     *
-     * @param order the order to check
-     * @return true if shelf is overflow shelf or the temperature match; false otherwise.
-     */
-    boolean matchTemperature(Order order) {
-        OrderTemperature orderTemperature = order.getTemp();
-        if (shelfType != ShelfType.OVERFLOW) {
-            if (shelfType == ShelfType.HOT && orderTemperature != OrderTemperature.HOT) {
-                return false;
-            }
-            if (shelfType == ShelfType.COLD && orderTemperature != OrderTemperature.COLD) {
-                return false;
-            }
-            if (shelfType == ShelfType.FROZEN && orderTemperature != OrderTemperature.FROZEN) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**
@@ -102,28 +66,8 @@ public class Shelf {
      * @return true if order was removed successfully, false otherwise.
      */
     public boolean remove(Order order) {
-        System.out.println("Order removed from " + shelfType.name() + ": " + order.getShortIdWithTemp());
+        System.out.println("Order removed from " + getShelfName() + ": " + order.getShortIdWithTemp());
         return currentOrders.remove(order);
-    }
-
-    public List<Order> getCurrentOrders() {
-        return currentOrders;
-    }
-
-    /**
-     * Remove a random order from shelf to clear space for incoming orders.
-     *
-     * @return order that was removed.
-     */
-    public Order removeRandomOrder() {
-        if (currentOrders.size() == 0) {
-            return null;
-        }
-        int ind = new Random().nextInt(currentOrders.size());
-        Order order = currentOrders.get(ind);
-        currentOrders.remove(ind);
-        System.out.println("Order removed from " + shelfType.name() + " to clear space: " + order.getShortId());
-        return order;
     }
 
     /**
@@ -156,7 +100,7 @@ public class Shelf {
         }
         if (!wasted.isEmpty()) {
             currentOrders.removeAll(wasted);
-            System.out.println("Orders wasted and removed from " + shelfType.name() + ": " + wastedStr);
+            System.out.println("Orders wasted and removed from " + getShelfName() + ": " + wastedStr);
         }
     }
 
@@ -177,7 +121,7 @@ public class Shelf {
         }
         if (!delivered.isEmpty()) {
             currentOrders.removeAll(delivered);
-            System.out.println("Orders delivered and removed from " + shelfType.name() + ": " + deliveredStr);
+            System.out.println("Orders delivered and removed from " + getShelfName() + ": " + deliveredStr);
         }
     }
 
@@ -187,13 +131,27 @@ public class Shelf {
      * @return a string representation of shelf's content.
      */
     public String getShelfContent() {
-        String str = shelfType.name() + " Occupancy (" + currentOrders.size() + "/" + capacity + "): ";
+        String str = " Occupancy (" + currentOrders.size() + "/" + capacity + "): ";
         for (Order order : currentOrders) {
             str += order.getShortId() + " ";
         }
         if (currentOrders.size() == 0) {
             str += "None";
         }
-        return str;
+        return getShelfName() + str;
     }
+
+    /**
+     * Get a string representation of shelf's name (hot, cold, frozen, overflow).
+     *
+     * @return shelf's name.
+     */
+    abstract String getShelfName();
+
+    /**
+     * Remove a random order from shelf to clear space for incoming orders.
+     *
+     * @return order that was removed.
+     */
+    public abstract Order removeRandomOrder();
 }

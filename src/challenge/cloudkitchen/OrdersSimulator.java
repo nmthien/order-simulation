@@ -32,10 +32,10 @@ public class OrdersSimulator {
     private final static Logger LOGGER = Logger.getLogger(OrdersSimulator.class.getName());
 
     List<Order> orders;
-    Shelf hotShelf = new Shelf(ShelfType.HOT);
-    Shelf coldShelf = new Shelf(ShelfType.COLD);
-    Shelf frozenShelf = new Shelf(ShelfType.FROZEN);
-    Shelf overflowShelf = new Shelf(ShelfType.OVERFLOW);
+    Shelf hotShelf = new SingleTemperatureShelf(Temperature.HOT);
+    Shelf coldShelf = new SingleTemperatureShelf(Temperature.COLD);
+    Shelf frozenShelf = new SingleTemperatureShelf(Temperature.FROZEN);
+    Shelf overflowShelf = new OverflowShelf();
     Integer numOrder;
     Integer ingestionRate;
 
@@ -253,13 +253,13 @@ public class OrdersSimulator {
      * @return shelf to put the order in.
      */
     Shelf getShelf(Order order) {
-        if (order.getTemp().equals(OrderTemperature.HOT)) {
+        if (order.getTemp().equals(Temperature.HOT)) {
             return hotShelf;
         }
-        if (order.getTemp().equals(OrderTemperature.COLD)) {
+        if (order.getTemp().equals(Temperature.COLD)) {
             return coldShelf;
         }
-        if (order.getTemp().equals(OrderTemperature.FROZEN)) {
+        if (order.getTemp().equals(Temperature.FROZEN)) {
             return frozenShelf;
         }
         return null;
